@@ -76,6 +76,30 @@ public:
         GetRef(index) = item;
     }
     
+    void RemoveAt(int index){
+        if(index < 0 || index >= length) throw IndexOutOfRange();
+        Node** current = &head;
+        for(int i = 0; i < index; i++){
+            current = &((*current)->next);
+        }
+        Node* to_delete = *current;
+        *current = to_delete->next;
+        if(to_delete == tail){
+            tail = (index == 0) ? nullptr : head;
+            if(tail != nullptr){
+                while(tail->next != nullptr) tail = tail->next;
+            }
+        }
+        delete to_delete;
+        length--;
+        cached_node = nullptr;
+        cached_index = -1;
+        if(length == 0){
+            head = nullptr;
+            tail = nullptr;
+        }
+    }
+    
     T& GetRef(int index){
         if(index < 0 || index >= length) throw IndexOutOfRange();
         Get(index);
