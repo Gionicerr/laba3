@@ -5,7 +5,7 @@
 template <typename T>
 class SquareMatrix{
 private:
-    int size;
+    const int size;
     MutableArraySequence<T> items;
     
     int GetIndex(int row, int column) const{
@@ -17,7 +17,7 @@ private:
         if(size != other.GetSize()) throw InvalidSize();
     }
 public:
-    SquareMatrix() : size(0), items(){}
+    SquareMatrix() : size(1), items(){}
 
     SquareMatrix(int matrix_size) : size(matrix_size), items(matrix_size * matrix_size){
         if(matrix_size < 0) throw InvalidSize();
@@ -37,6 +37,29 @@ public:
 
     const T& operator()(int row, int column) const{
         return items(GetIndex(row, column));
+    }
+
+    SquareMatrix<T> operator+(const SquareMatrix<T>& other) const{
+        return Add(other);
+    }
+
+    SquareMatrix<T> operator*(const T& scalar) const{
+        return MultiplyByScalar(scalar);
+    }
+
+    SquareMatrix<T> operator*(const SquareMatrix<T>& other) const{
+        CheckSameSize(other);
+        SquareMatrix<T> result(size);
+        for(int row = 0; row < size; row++){
+            for(int column = 0; column < size; column++){
+                T value = T();
+                for(int k = 0; k < size; k++){
+                    value = value + Get(row, k) * other.Get(k, column);
+                }
+                result(row, column) = value;
+            }
+        }
+        return result;
     }
 
     SquareMatrix<T> Add(const SquareMatrix<T>& other) const{
@@ -91,9 +114,8 @@ public:
     }
 
     SquareMatrix<T> SwapColumns(int first_column, int second_column) const{
-        if(first_column < 0 || second_column < 0 || first_column >= size || second_column >= 0) throw IndexOutOfRange();
+        if(first_column < 0 || second_column < 0 || first_column >= size || second_column >= size) throw IndexOutOfRange();
         SquareMatrix<T> result(size);
-        result.size = size;
         for(int row = 0; row < size; row++){
             for(int column = 0; column < size; column++){
                 if(column == first_column){
