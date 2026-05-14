@@ -27,6 +27,10 @@ public:
         if(matrix_size < 0) throw InvalidSize();
     }
 
+    int GetSize() const{
+        return size;
+    }
+
     T Get(int row, int column) const{
         return items.Get(GetIndex(row,column));
     }
@@ -91,7 +95,7 @@ public:
                 result += value * value;
             }
         }
-        return sqrt(result);
+        return std::sqrt(result);
     }
 
     SquareMatrix<T> SwapRows(int first_row, int second_row) const{

@@ -16,9 +16,9 @@ private:
         return left < right;
     }
 public:
-    Deque() : size(0), items(0){}
+    Deque() : size(0), items(ListSequence<T>()){}
     
-    Deque(int count) : size(0), items(0){
+    Deque(int count) : size(0), items(ListSequence<T>()){
         if(count < 0) throw InvalidSize();
         for(int i = 0; i < count; i++){
             items.Append(T());
@@ -39,6 +39,10 @@ public:
     const T& operator()(int index) const{
         CheckIndex(index);
         return items.GetRef(index);
+    }
+
+    int GetSize() const{
+        return size;
     }
 
     T Get(int index) const{

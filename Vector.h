@@ -57,7 +57,7 @@ public:
     }
 
     T ScalarProductOfVectors(const Vector<T>& other) const{
-        CheckSameDimension();
+        CheckSameDimension(other);
         T result = T();
         for(int i = 0; i < GetDimension(); i++){
             result = result + Get(i) * other.Get(i);
@@ -71,6 +71,6 @@ public:
             double value = Get(i);
             result += value * value;
         }
-        return sqrt(result);
+        return std::sqrt(result);
     }
 };
