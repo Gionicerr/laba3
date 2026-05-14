@@ -2,187 +2,205 @@
 #include <string>
 #include <limits>
 #include <exception>
+#include <cmath>
+#include <iomanip>
+
 #include "MutableArraySequence.h"
 #include "ImmutableArraySequence.h"
 #include "ListSequence.h"
+#include "Deque.h"
+#include "Vector.h"
+#include "SquareMatrix.h"
 
-using SequencePtr = Sequence<int>*;
+// --- Helper functions for Deque functional methods ---
+int SquareFunc(int x){return x * x;}
+bool IsEven(int x){return x % 2 == 0;}
+int SumReducer(int a, int b){return a + b;}
+bool DescendingSort(int a, int b){return a > b;}
 
+// --- Input Utility ---
 template <typename T>
 T SafeInput(const std::string& prompt){
     T value;
     while(true){
-        std::cout<<prompt;
-        if(std::cin>>value){
+        std::cout << prompt;
+        if(std::cin >> value){
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return value;
         }
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout<<"Invalueid input. Try again.\n";
+        std::cout << "Input error. Try again.\n";
     }
 }
 
-void AddToSequenceStorage(DynamicArray<SequencePtr>& storage, SequencePtr item){
-    int current_size = storage.GetSize();
-    storage.Resize(current_size+1);
-    storage.Set(current_size, item);
-}
-
-void CreateNewSequence(DynamicArray<SequencePtr>& storage, int& current_index){
-    int type = SafeInput<int>("Sequence type:    (1 - Array; 2 - List)");
-    int count = SafeInput<int>("Elements count: ");
-    int* data = new int[count];
-    for(int i = 0; i < count; i++){
-        data[i] = SafeInput<int>("Elem #" + std::to_string(i) + ": ");
-    }
-    SequencePtr new_sequence = nullptr;
-    if(type == 1){
-        int mode = SafeInput<int>("Mutable - 1; Immutable - 0: \n");
-        if(mode){
-            new_sequence = new MutableArraySequence<int>(data, count);
-        }
-        else{
-            new_sequence = new ImmutableArraySequence<int>(data, count);
-        }
-    }
-    else{
-        new_sequence = new ListSequence<int>(data, count);
-    }
-    delete[] data;
-    AddToSequenceStorage(storage, new_sequence);
-    current_index = storage.GetSize();
-    std::cout<<"Sequence selected: "<<current_index<<"\n";
-}
-
-void PrintSequence(const SequencePtr sequence, int id){
-    if(!sequence){
-        std::cout<<"[ "<<id<<" ] Empty\n";
-        return;
-    }
-    std::cout<<"[ "<<id<<" ] : { ";
-    for(int i = 0; i < sequence->GetLength(); i++){
-        std::cout<<sequence->Get(i);
-        if(i < sequence->GetLength()-1){
-            std::cout<<", ";
-        }
-    }
-    std::cout<<" }\n";
-}
-
-void HandleOperations(DynamicArray<SequencePtr>& storage, int& current_index, int choice){
-    if(current_index < 0 || current_index >= storage.GetSize()){
-        std::cout<<"No sequence selected.\n";
-        return;
-    }
-    SequencePtr sequence = storage.Get(current_index);
-    SequencePtr result = nullptr;
-    switch(choice){
-        case 1:{
-            int value = SafeInput<int>("value to append: ");
-            result = sequence->Append(value);
-            break;
-        }
-        case 2:{
-            int value = SafeInput<int>("value to prepend: ");
-            result = sequence->Prepend(value);
-            break;
-        }
-        case 3:{
-            int index = SafeInput<int>("Index: ");
-            int value = SafeInput<int>("value: ");
-            result = sequence->InsertAt(value, index);
-            break;
-        }
-        case 4:{
-            int target_index = SafeInput<int>("Index of sequence to concat with: ");
-            if(target_index >= 0 && target_index < storage.GetSize()){
-                result = sequence->Concat(storage.Get(target_index));
-            }
-            else{
-                std::cout << "Invalueid index.\n";
-                return;
-            }
-            break;
-        }
-        case 5:{
-            int start = SafeInput<int>("Start index: ");
-            int end = SafeInput<int>("End index: ");
-            result = sequence->GetSubsequence(start, end);
-            break;
-        }
-        case 6:
-            break;
-        }
-    if(result != sequence){
-        AddToSequenceStorage(storage, result);
-        current_index = storage.GetSize() - 1;
-        std::cout<<"Immutable operation done.\n";
-    }
-    else{
-        std::cout<<"Mutable operation done.\n";
-    }
-}
-int main(){
-    DynamicArray<SequencePtr> storage(0);
-    int current_index = -1;
-    while(true){
-        std::cout<<"---Menu---\n";
-        if(current_index >= 0 && current_index < storage.GetSize()){
-            std::cout<<"Active: ";
-            PrintSequence(storage.Get(current_index), current_index);
-        }
-        else{
-            std::cout<<"No sequence selected.\n";
-        }
-        std::cout<<"1) Create\n2) Show all\n3) Select\n4) Append\n5) Prepend\n6) Insert\n7) Concat\n8) Subseq\n9) Delete current\n0) Exit\n";
-        int choice = SafeInput<int>("Pick: ");
+// --- Printing Utilities ---
+void PrintDeque(const Deque<int>& dq, const std::string& name = "Deque"){
+    std::cout << name << ": [ ";
+    for(int i = 0; ; i++){
         try{
-            if(choice == 0){
-                for(int i = 0; i < storage.GetSize(); i++){
-                    delete storage.Get(i);
-                }
-                break;
-            }
+            std::cout << dq.Get(i) << " ";
+        }catch(...){break;}
+    }
+    std::cout << "]\n";
+}
+
+void PrintVector(const Vector<int>& v, const std::string& name = "Vector"){
+    std::cout << name << " (dim " << v.GetDimension() << "): ( ";
+    for(int i = 0; i < v.GetDimension(); i++){
+        std::cout << v.Get(i) << (i + 1 < v.GetDimension() ? ", " : " ");
+    }
+    std::cout << ")\n";
+}
+
+void PrintMatrix(const SquareMatrix<int>& m, const std::string& name = "Matrix"){
+    std::cout << name << " (" << m.GetSize() << "x" << m.GetSize() << "):\n";
+    for(int i = 0; i < m.GetSize(); i++){
+        for(int j = 0; j < m.GetSize(); j++){
+            std::cout << std::setw(4) << m.Get(i, j) << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
+// --- Module Runners ---
+
+void RunDeque(){
+    Deque<int> dq;
+    while(true){
+        std::cout << "\n--- DEQUE MENU ---\n"
+                  << "1) PushFront  2) PushBack   3) PopFront    4) PopBack\n"
+                  << "5) Map (^2)   6) Where (even) 7) Reduce (sum) 8) Concat\n"
+                  << "9) SubDeque   10) Contain?   11) Sort (desc) 12) Merge\n"
+                  << "13) Print     0) Back\n";
+        int choice = SafeInput<int>("Choice: ");
+        if(choice == 0) return;
+
+        try{
             switch(choice){
-                case 1:{
-                    CreateNewSequence(storage, current_index);
+                case 1: dq.PushFront(SafeInput<int>("Value: ")); break;
+                case 2: dq.PushBack(SafeInput<int>("Value: ")); break;
+                case 3: std::cout << "Removed: " << dq.PopFront() << "\n"; break;
+                case 4: std::cout << "Removed: " << dq.PopBack() << "\n"; break;
+                case 5: {
+                    Deque<int> mapped = dq.Map(SquareFunc);
+                    PrintDeque(mapped, "Mapped (x^2)");
                     break;
                 }
-                case 2:{
-                    for(int i = 0; i < storage.GetSize(); i++){
-                        PrintSequence(storage.Get(i), i);
-                    }
+                case 6: {
+                    Deque<int> filtered = dq.Where(IsEven);
+                    PrintDeque(filtered, "Where (even)");
                     break;
                 }
-                case 3:{
-                    int index = SafeInput<int>("Index: ");
-                    if(index > storage.GetSize()) throw IndexOutOfRange();
-                    else{
-                        current_index = index;
-                    }
+                case 7: {
+                    int start = SafeInput<int>("Start value: ");
+                    std::cout << "Reduce Result: " << dq.Reduce(SumReducer, start) << "\n";
                     break;
                 }
-                case 4: case 5: case 6: case 7: case 8:
-                    HandleOperations(storage, current_index, choice);
-                    break;
-                case 9:{
-                    if(current_index < 0) break;
-                    delete storage.Get(current_index);
-                    for(int i = 0; i < storage.GetSize()-1; i++){
-                        storage.Set(i, storage.Get(i+1));
-                    }
-                    storage.Resize(storage.GetSize()-1);
-                    current_index = (storage.GetSize() > 0) ? 1 : -1;
+                case 8: {
+                    Deque<int> other; other.PushBack(88); other.PushBack(99);
+                    PrintDeque(dq.Concat(other), "Concat with [88, 99]");
                     break;
                 }
-                default:
-                    std::cout<<"Unkown choice\n";
+                case 9: {
+                    int s = SafeInput<int>("Start index: "), e = SafeInput<int>("End index: ");
+                    PrintDeque(dq.GetSubDeque(s, e), "SubDeque");
+                    break;
+                }
+                case 10: {
+                    Deque<int> sub; sub.PushBack(SafeInput<int>("Value to find: "));
+                    std::cout << (dq.ContainSubDeque(sub) ? "Contains\n" : "Does not contain\n");
+                    break;
+                }
+                case 11: dq.Sort(DescendingSort); std::cout << "Sorted descending.\n"; break;
+                case 12: {
+                    Deque<int> other; other.PushBack(50);
+                    PrintDeque(dq.Merge(other), "Merge with [50]");
+                    break;
+                }
+                case 13: PrintDeque(dq); break;
             }
-        }
-        catch(const std::exception& e){
-            std::cout<<"Error: "<<e.what()<<"\n";
-        }
+        }catch(const std::exception& e){std::cout << "Error: " << e.what() << "\n";}
+    }
+}
+
+void RunVector(){
+    int dim = SafeInput<int>("Vector dimension: ");
+    Vector<int> v1(dim), v2(dim);
+    for(int i = 0; i < dim; i++) v1(i) = SafeInput<int>("V1[" + std::to_string(i) + "]: ");
+    for(int i = 0; i < dim; i++) v2(i) = SafeInput<int>("V2[" + std::to_string(i) + "]: ");
+
+    while(true){
+        std::cout << "\n--- VECTOR MENU ---\n"
+                  << "1) Add  2) MultiplyByScalar  3) ScalarProduct  4) Norm  5) Print  0) Back\n";
+        int choice = SafeInput<int>("Choice: ");
+        if(choice == 0) return;
+
+        try{
+            if(choice == 1) PrintVector(v1.Add(v2), "V1 + V2");
+            else if(choice == 2) PrintVector(v1.MultyplyByScalar(SafeInput<int>("Scalar: ")), "Result");
+            else if(choice == 3) std::cout << "Scalar Product: " << v1.ScalarProductOfVectors(v2) << "\n";
+            else if(choice == 4) std::cout << "V1 Norm: " << v1.Norm() << "\n";
+            else if(choice == 5){PrintVector(v1, "V1"); PrintVector(v2, "V2");}
+        }catch(const std::exception& e){std::cout << "Error: " << e.what() << "\n";}
+    }
+}
+
+void RunMatrix(){
+    int size = SafeInput<int>("Square matrix size: ");
+    SquareMatrix<int> m(size);
+    for(int i = 0; i < size; i++)
+        for(int j = 0; j < size; j++)
+            m(i, j) = SafeInput<int>("M["+std::to_string(i)+"]["+std::to_string(j)+"]: ");
+
+    while(true){
+        std::cout << "\n--- MATRIX MENU ---\n"
+                  << "1) Add  2) MultByScalar  3) MultByMatrix  4) Norm\n"
+                  << "5) Swap Rows  6) Swap Cols  7) MultRowByScalar  8) Print  0) Back\n";
+        int choice = SafeInput<int>("Choice: ");
+        if(choice == 0) return;
+
+        try{
+            switch(choice){
+                case 1: PrintMatrix(m.Add(m), "M + M"); break;
+                case 2: PrintMatrix(m.MultiplyByScalar(SafeInput<int>("Scalar: ")), "Result"); break;
+                case 3: PrintMatrix(m * m, "M * M"); break;
+                case 4: std::cout << "Frobenius Norm: " << m.Norm() << "\n"; break;
+                case 5: {
+                    int r1 = SafeInput<int>("Row 1: "), r2 = SafeInput<int>("Row 2: ");
+                    PrintMatrix(m.SwapRows(r1, r2), "Swapped Rows");
+                    break;
+                }
+                case 6: {
+                    int c1 = SafeInput<int>("Col 1: "), c2 = SafeInput<int>("Col 2: ");
+                    PrintMatrix(m.SwapColumns(c1, c2), "Swapped Cols");
+                    break;
+                }
+                case 7: {
+                    int r = SafeInput<int>("Row index: "), s = SafeInput<int>("Scalar: ");
+                    PrintMatrix(m.MultiplyRowByScalar(r, s), "Result");
+                    break;
+                }
+                case 8: PrintMatrix(m); break;
+            }
+        }catch(const std::exception& e){std::cout << "Error: " << e.what() << "\n";}
+    }
+}
+
+int main(){
+    while(true){
+        std::cout << "\n=== MAIN MENU ===\n"
+                  << "1) Deque Operations\n"
+                  << "2) Vector Operations\n"
+                  << "3) Matrix Operations\n"
+                  << "0) Exit\n";
+        int choice = SafeInput<int>("Select module: ");
+        if(choice == 0) break;
+
+        if(choice == 1) RunDeque();
+        else if(choice == 2) RunVector();
+        else if(choice == 3) RunMatrix();
+        else std::cout << "Unknown choice.\n";
     }
     return 0;
 }
