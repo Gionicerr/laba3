@@ -44,6 +44,10 @@ public:
         items->Set(index, value);
     }
 
+    void RemoveAt(int index){
+        items->RemoveAt(index);
+    }
+
     T& GetRef(int index){
         return items->GetRef(index);
     }
@@ -79,9 +83,9 @@ public:
     }
     
     Sequence<T>* GetSubsequence(const int start_index, const int end_index) override{
-        LinkedList<T>* result = new ListSequence<T>();
+        ListSequence<T>* result = new ListSequence<T>();
         for(int i = start_index; i <= end_index; i++){
-            result->Append(items-Get(i));
+            result->Append(items->Get(i));
         }
         return result;
     }

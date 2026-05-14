@@ -64,12 +64,7 @@ public:
     T PopBack(){
         if(size == 0) throw IndexOutOfRange();
         T result = items.Get(size - 1);
-        if(size > 1){
-            items.GetSubsequence(0, size-2);
-        }
-        else{
-            items.GetSubsequence(0, -1);
-        }
+        items.RemoveAt(size - 1);
         size--;
         return result;
     }
@@ -77,12 +72,7 @@ public:
     T PopFront(){
         if(size == 0) throw IndexOutOfRange();
         T result = items.Get(0);
-        if(size > 1){
-            items.GetSubsequence(1, size-1);
-        }
-        else{
-            items.GetSubsequence(0, -1);
-        }
+        items.RemoveAt(0);
         size--;
         return result;
     }
@@ -157,7 +147,6 @@ public:
             for(int j = i + 1; j < size; j++){
                 if(condition((*this)(j), (*this)(min_index))){
                     min_index = j;
-                    break;
                 }
             }
             if(min_index != i){
