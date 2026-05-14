@@ -16,9 +16,9 @@ private:
         return left < right;
     }
 public:
-    Deque() : size(0), items(0){}
+    Deque() : size(0), items(){}
     
-    Deque(int count) : size(0), items(0){
+    Deque(int count) : size(0), items(){
         if(count < 0) throw InvalidSize();
         for(int i = 0; i < count; i++){
             items.Append(T());

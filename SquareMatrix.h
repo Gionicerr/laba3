@@ -1,6 +1,7 @@
 #pragma once
 #include "MutableArraySequence.h"
 #include "Exceptions.h"
+#include <cmath>
 
 template <typename T>
 class SquareMatrix{
@@ -91,7 +92,7 @@ public:
                 result += value * value;
             }
         }
-        return sqrt(result);
+        return std::sqrt(result);
     }
 
     SquareMatrix<T> SwapRows(int first_row, int second_row) const{
